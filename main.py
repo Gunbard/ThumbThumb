@@ -1,5 +1,5 @@
 # ThumbThumb
-# External dependencies: ffmpeg, vcsi
+# External dependencies: mtn-win32
 # 
 import os, sys, subprocess, asyncio, quamash
 from mainWindow import Ui_MainWindow
@@ -36,8 +36,9 @@ def command_finished(status):
         ui.statusBar.showMessage("Contact sheet generation complete!")
 
 async def process_file(file, input_path, output_path):    
-    command = "vcsi {}\{} -t -w 850 -g 4x4 --background-color 000000 " \
-        "--metadata-font-color ffffff -o {}\{}.jpg".format(input_path, file, output_path, file)
+    #command = "vcsi {}\{} -t -w 850 -g 4x4 --background-color 000000 " \
+    #    "--metadata-font-color ffffff -o {}\{}.jpg".format(input_path, file, output_path, file)
+    command = "mtn.exe -P -r 4 {}\\{} -O {}".format(input_path, file, output_path)
     print(command)
     proc = await asyncio.create_subprocess_shell(command)
     returncode = await proc.wait()
