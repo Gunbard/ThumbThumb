@@ -82,9 +82,9 @@ class Ui_MainWindow(object):
         self.buttonBrowseSource = QtWidgets.QPushButton(self.centralwidget)
         self.buttonBrowseSource.setObjectName("buttonBrowseSource")
         self.gridLayout.addWidget(self.buttonBrowseSource, 0, 2, 1, 1)
-        self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit.setObjectName("lineEdit")
-        self.gridLayout.addWidget(self.lineEdit, 2, 1, 1, 1)
+        self.fieldExtensionFilter = QtWidgets.QLineEdit(self.centralwidget)
+        self.fieldExtensionFilter.setObjectName("fieldExtensionFilter")
+        self.gridLayout.addWidget(self.fieldExtensionFilter, 2, 1, 1, 1)
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
@@ -112,7 +112,7 @@ class Ui_MainWindow(object):
         self.labelOutput.setText(_translate("MainWindow", "Output Dir:"))
         self.buttonBrowseOutput.setText(_translate("MainWindow", "Browse"))
         self.buttonBrowseSource.setText(_translate("MainWindow", "Browse"))
-        self.lineEdit.setPlaceholderText(_translate("MainWindow", "mp4, mkv, ..."))
+        self.fieldExtensionFilter.setPlaceholderText(_translate("MainWindow", "mp4, mkv, webm ..."))
         self.label.setText(_translate("MainWindow", "Extensions:"))
 
 
