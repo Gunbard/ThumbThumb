@@ -5,7 +5,7 @@ from mainWindow import Ui_MainWindow
 from PyQt5 import QtCore, QtWidgets
 
 MAX_BATCH_SIZE = 3
-DEFAULT_EXTS = ["mp4", "mkv", "webm"]
+DEFAULT_EXTS = ["mp4", "mkv", "webm", "avi", "mov"]
 
 def scan_dir():
     #stub
@@ -16,6 +16,7 @@ def set_processing_mode(state):
     ui.buttonBrowseOutput.setEnabled(not state)
     ui.progressBar.setVisible(state)
     ui.checkboxSubfolders.setEnabled(not state)
+    ui.checkboxKeepStructure.setEnabled(not state)
     ui.fieldOutput.setEnabled(not state)
     ui.fieldSource.setEnabled(not state)
     ui.fieldExtensionFilter.setEnabled(not state)
@@ -38,11 +39,17 @@ def command_finished(status):
             ui.buttonGenerate.setEnabled(True)
             ui.statusBar.showMessage("Generation complete! {} file(s) failed to generate.".format(len(failedFiles)))
 
-async def process_file(full_file_path, output_path, semaphore):
+async def process_file(full_file_path, input_path, output_path, keep_structure, semaphore):
     async with semaphore:   
         root, file = os.path.split(full_file_path)
-        command = "vcsi.exe {} -t -w 850 -g 4x4 --background-color 000000 " \
-            "--metadata-font-color ffffff -o {}\\{}.jpg".format(full_file_path, output_path, file)
+        output_file = os.path.relpath(full_file_path, input_path) if keep_structure else file
+        # Create subfolders in output folder if needed
+        if keep_structure:
+            new_dir = os.path.join(output_path, os.path.dirname(output_file))
+            if not os.path.exists(new_dir):
+                os.mkdir(new_dir)
+        command = "vcsi {} -t -w 850 -g 4x4 --background-color 000000 " \
+            "--metadata-font-color ffffff -o {}\\{}.jpg".format(full_file_path, output_path, output_file)
         proc = await asyncio.create_subprocess_shell(command)
         returncode = await proc.wait()
         print(returncode)
@@ -88,7 +95,7 @@ def on_generate():
         ui.progressBar.setRange(0, len(filesToProcess))
         ui.statusBar.showMessage("Starting processing {} file(s)...".format(len(filesToProcess)))
         for file in filesToProcess:
-            task = asyncio.ensure_future(process_file(file,  ui.fieldOutput.text(), asyncio_semaphore))
+            task = asyncio.ensure_future(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text(), ui.checkboxKeepStructure.isChecked(), asyncio_semaphore))
             task.add_done_callback(command_finished)
             #asyncio.run(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text()))
     
@@ -104,7 +111,14 @@ def on_browse_output():
     if path == "":
         path = os.getcwd()
     ui.fieldOutput.setText(os.path.normpath(path))
-    
+
+def on_checkboxSubfolders_changed():
+    checked = ui.checkboxSubfolders.isChecked()
+    ui.checkboxKeepStructure.setEnabled(checked)
+    if not checked:
+        ui.checkboxKeepStructure.setChecked(False)
+
+
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 app = QtWidgets.QApplication(sys.argv)
 loop = quamash.QEventLoop(app)
@@ -122,6 +136,7 @@ ui.buttonGenerate.setEnabled(False)
 ui.buttonGenerate.clicked.connect(on_generate)
 ui.buttonBrowseSource.clicked.connect(on_browse_source)
 ui.buttonBrowseOutput.clicked.connect(on_browse_output)
+ui.checkboxSubfolders.stateChanged.connect(on_checkboxSubfolders_changed)
 
 # Globals
 failedFiles = []
