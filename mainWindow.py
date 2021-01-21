@@ -106,21 +106,11 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "ThumbThumb"))
         self.buttonGenerate.setText(_translate("MainWindow", "Generate"))
-        self.checkboxSubfolders.setText(_translate("MainWindow", "Include Subfolders?"))
+        self.checkboxSubfolders.setText(_translate("MainWindow", "Include subfolders?"))
         self.fieldSource.setPlaceholderText(_translate("MainWindow", "Select a source directory (required)"))
         self.labelSource.setText(_translate("MainWindow", "Source Dir:"))
         self.labelOutput.setText(_translate("MainWindow", "Output Dir:"))
         self.buttonBrowseOutput.setText(_translate("MainWindow", "Browse"))
         self.buttonBrowseSource.setText(_translate("MainWindow", "Browse"))
-        self.fieldExtensionFilter.setPlaceholderText(_translate("MainWindow", "mp4, mkv, webm ..."))
+        self.fieldExtensionFilter.setPlaceholderText(_translate("MainWindow", "mp4, mkv, webm, ..."))
         self.label.setText(_translate("MainWindow", "Extensions:"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())

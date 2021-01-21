@@ -1,5 +1,4 @@
 # ThumbThumb
-# External dependencies: mtn-win32
 # 
 import os, sys, subprocess, asyncio, quamash
 from mainWindow import Ui_MainWindow
@@ -39,15 +38,31 @@ def command_finished(status):
             ui.buttonGenerate.setEnabled(True)
             ui.statusBar.showMessage("Generation complete! {} file(s) failed to generate.".format(len(failedFiles)))
 
-async def process_file(file, input_path, output_path, semaphore):
-    async with semaphore:    
-        command = "vcsi.exe {}\{} -t -w 850 -g 4x4 --background-color 000000 " \
-            "--metadata-font-color ffffff -o {}\{}.jpg".format(input_path, file, output_path, file)
+async def process_file(full_file_path, output_path, semaphore):
+    async with semaphore:   
+        root, file = os.path.split(full_file_path)
+        command = "vcsi.exe {} -t -w 850 -g 4x4 --background-color 000000 " \
+            "--metadata-font-color ffffff -o {}\\{}.jpg".format(full_file_path, output_path, file)
         proc = await asyncio.create_subprocess_shell(command)
         returncode = await proc.wait()
         print(returncode)
         if returncode > 0:
-            failedFiles.append(file) 
+            failedFiles.append(full_file_path) 
+
+def validate_files(path, files):
+    valid_files = []
+    for file in files:
+        filename, file_extension = os.path.splitext(file)
+        ext = file_extension[1:] # Exclude dot
+        ext_filter_text = ui.fieldExtensionFilter.text()
+        if len(ext_filter_text) > 0:
+            extensions = map(str.strip, ext_filter_text.split(",")) # Remove whitespace
+            if ext in extensions:
+                valid_files.append(os.path.join(path, file))
+        else:
+            if ext in DEFAULT_EXTS:
+                valid_files.append(os.path.join(path, file))
+    return valid_files
 
 def on_generate():
     if ui.progressBar.isVisible() == True:
@@ -59,18 +74,13 @@ def on_generate():
     else:
         failedFiles.clear()
         filesToProcess = []
-        files = os.listdir(ui.fieldSource.text())
-        for file in files:
-            filename, file_extension = os.path.splitext(file)
-            ext = file_extension[1:] # Exclude dot
-            ext_filter_text = ui.fieldExtensionFilter.text()
-            if len(ext_filter_text) > 0:
-                extensions = map(str.strip, ext_filter_text.split(",")) # Remove whitespace
-                if ext in extensions:
-                    filesToProcess.append(file)
-            else:
-                if ext in DEFAULT_EXTS:
-                    filesToProcess.append(file)
+        if ui.checkboxSubfolders.isChecked() == True:
+            for root, dirs, files in os.walk(ui.fieldSource.text()):
+                path = root.split(os.sep)
+                print((len(path) - 1) * '---', os.path.basename(root))
+                filesToProcess.extend(validate_files(root, files))
+        else:
+            filesToProcess = validate_files(ui.fieldSource.text(), os.listdir(ui.fieldSource.text()))
         print(filesToProcess)
 
         set_processing_mode(True)
@@ -78,7 +88,7 @@ def on_generate():
         ui.progressBar.setRange(0, len(filesToProcess))
         ui.statusBar.showMessage("Starting processing {} file(s)...".format(len(filesToProcess)))
         for file in filesToProcess:
-            task = asyncio.ensure_future(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text(), asyncio_semaphore))
+            task = asyncio.ensure_future(process_file(file,  ui.fieldOutput.text(), asyncio_semaphore))
             task.add_done_callback(command_finished)
             #asyncio.run(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text()))
     
