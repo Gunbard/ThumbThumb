@@ -5,6 +5,7 @@ from mainWindow import Ui_MainWindow
 from PyQt5 import QtCore, QtWidgets
 
 MAX_BATCH_SIZE = 3
+MAX_WALK_DEPTH = 10
 DEFAULT_EXTS = ["mp4", "mkv", "webm", "avi", "mov"]
 
 def scan_dir():
@@ -16,7 +17,7 @@ def set_processing_mode(state):
     ui.buttonBrowseOutput.setEnabled(not state)
     ui.progressBar.setVisible(state)
     ui.checkboxSubfolders.setEnabled(not state)
-    ui.checkboxKeepStructure.setEnabled(not state)
+    ui.checkboxKeepStructure.setEnabled(ui.checkboxSubfolders.isChecked())
     ui.fieldOutput.setEnabled(not state)
     ui.fieldSource.setEnabled(not state)
     ui.fieldExtensionFilter.setEnabled(not state)
@@ -38,6 +39,16 @@ def command_finished(status):
             set_processing_mode(False)
             ui.buttonGenerate.setEnabled(True)
             ui.statusBar.showMessage("Generation complete! {} file(s) failed to generate.".format(len(failedFiles)))
+            if (len(failedFiles) > 0):
+                message = ""
+                for file in failedFiles:
+                    message += file + os.linesep
+                dialog = QtWidgets.QMessageBox()
+                dialog.setIcon(QtWidgets.QMessageBox.Critical)
+                dialog.setWindowTitle("Failed Files")
+                dialog.setText(message)
+                dialog.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                dialog.exec()
 
 async def process_file(full_file_path, input_path, output_path, keep_structure, semaphore):
     async with semaphore:   
@@ -82,10 +93,12 @@ def on_generate():
         failedFiles.clear()
         filesToProcess = []
         if ui.checkboxSubfolders.isChecked() == True:
-            for root, dirs, files in os.walk(ui.fieldSource.text()):
-                path = root.split(os.sep)
-                print((len(path) - 1) * '---', os.path.basename(root))
-                filesToProcess.extend(validate_files(root, files))
+            source = ui.fieldSource.text()
+            for root, dirs, files in os.walk(source):
+                if root[len(source):].count(os.sep) < MAX_WALK_DEPTH:
+                    path = root.split(os.sep)
+                    print((len(path) - 1) * '---', os.path.basename(root))
+                    filesToProcess.extend(validate_files(root, files))
         else:
             filesToProcess = validate_files(ui.fieldSource.text(), os.listdir(ui.fieldSource.text()))
         print(filesToProcess)
@@ -104,7 +117,6 @@ def on_browse_source():
     if path == "":
         path = os.getcwd()
     ui.fieldSource.setText(os.path.normpath(path))
-    ui.buttonGenerate.setEnabled(True)
     
 def on_browse_output():
     path = str(QtWidgets.QFileDialog.getExistingDirectory(None, "Select Output Directory"))
@@ -118,6 +130,8 @@ def on_checkboxSubfolders_changed():
     if not checked:
         ui.checkboxKeepStructure.setChecked(False)
 
+def on_fieldSource_changed(newText):
+    ui.buttonGenerate.setEnabled(len(newText.strip()) > 0)
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 app = QtWidgets.QApplication(sys.argv)
@@ -132,11 +146,12 @@ ui.progressBar.setVisible(False)
 ui.fieldOutput.setText(os.getcwd())
 ui.buttonGenerate.setEnabled(False)
 
-# BUTTON EVENTS
+# EVENTS
 ui.buttonGenerate.clicked.connect(on_generate)
 ui.buttonBrowseSource.clicked.connect(on_browse_source)
 ui.buttonBrowseOutput.clicked.connect(on_browse_output)
 ui.checkboxSubfolders.stateChanged.connect(on_checkboxSubfolders_changed)
+ui.fieldSource.textChanged.connect(on_fieldSource_changed)
 
 # Globals
 failedFiles = []
