@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>200</height>
+    <width>475</width>
+    <height>242</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -114,7 +114,7 @@
       </property>
      </widget>
     </item>
-    <item row="7" column="0">
+    <item row="8" column="0">
      <widget class="QProgressBar" name="progressBar">
       <property name="enabled">
        <bool>true</bool>
@@ -158,7 +158,7 @@
       </property>
      </widget>
     </item>
-    <item row="6" column="0">
+    <item row="7" column="0">
      <widget class="QPushButton" name="buttonGenerate">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -183,6 +183,19 @@
       </property>
       <property name="flat">
        <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
+     <widget class="QCheckBox" name="checkboxPrefixFilename">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">padding-left: 16</string>
+      </property>
+      <property name="text">
+       <string>Prefix output filename with folder name</string>
       </property>
      </widget>
     </item>

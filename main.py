@@ -8,16 +8,13 @@ MAX_BATCH_SIZE = 3
 MAX_WALK_DEPTH = 10
 DEFAULT_EXTS = ["mp4", "mkv", "webm", "avi", "mov"]
 
-def scan_dir():
-    #stub
-    return    
-
 def set_processing_mode(state):
     ui.buttonBrowseSource.setEnabled(not state)
     ui.buttonBrowseOutput.setEnabled(not state)
     ui.progressBar.setVisible(state)
     ui.checkboxSubfolders.setEnabled(not state)
-    ui.checkboxKeepStructure.setEnabled(ui.checkboxSubfolders.isChecked())
+    ui.checkboxKeepStructure.setEnabled(ui.checkboxSubfolders.isEnabled() and ui.checkboxSubfolders.isChecked())
+    ui.checkboxPrefixFilename.setEnabled(ui.checkboxSubfolders.isEnabled() and ui.checkboxSubfolders.isChecked())
     ui.fieldOutput.setEnabled(not state)
     ui.fieldSource.setEnabled(not state)
     ui.fieldExtensionFilter.setEnabled(not state)
@@ -50,22 +47,40 @@ def command_finished(status):
                 dialog.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 dialog.exec()
 
-async def process_file(full_file_path, input_path, output_path, keep_structure, semaphore):
+async def process_file(full_file_path, input_path, output_path, keep_structure, prefix_dirname, semaphore):
     async with semaphore:   
         root, file = os.path.split(full_file_path)
         output_file = os.path.relpath(full_file_path, input_path) if keep_structure else file
+        new_dir = os.path.join(output_path, os.path.dirname(output_file))
+
         # Create subfolders in output folder if needed
         if keep_structure:
-            new_dir = os.path.join(output_path, os.path.dirname(output_file))
             if not os.path.exists(new_dir):
                 os.mkdir(new_dir)
+
+        if prefix_dirname:
+            # Prefix the output filename with the name of the folder it's in
+            subdir = os.path.dirname(os.path.relpath(full_file_path, input_path))
+            if len(subdir) > 0:
+                output_file = "{}-{}".format(os.path.relpath(subdir, os.path.dirname(subdir)), os.path.basename(output_file))
+                if keep_structure:
+                    output_file = os.path.join(subdir, output_file)
+                    
+
         command = "vcsi {} -t -w 850 -g 4x4 --background-color 000000 " \
             "--metadata-font-color ffffff -o {}\\{}.jpg".format(full_file_path, output_path, output_file)
         proc = await asyncio.create_subprocess_shell(command)
         returncode = await proc.wait()
-        print(returncode)
         if returncode > 0:
             failedFiles.append(full_file_path) 
+
+def valid_folders():
+    if len(ui.fieldSource.text()) == 0 or len(ui.fieldOutput.text()) == 0:
+        ui.statusBar.showMessage("Source and Output folders must be set!")
+        return False
+    else:
+        ui.statusBar.clearMessage()
+        return True
 
 def validate_files(path, files):
     valid_files = []
@@ -103,12 +118,16 @@ def on_generate():
             filesToProcess = validate_files(ui.fieldSource.text(), os.listdir(ui.fieldSource.text()))
         print(filesToProcess)
 
+        if len(filesToProcess) == 0:
+            ui.statusBar.showMessage("No valid files found in source folder!")
+            return
+
         set_processing_mode(True)
         ui.progressBar.setValue(0)
         ui.progressBar.setRange(0, len(filesToProcess))
         ui.statusBar.showMessage("Starting processing {} file(s)...".format(len(filesToProcess)))
         for file in filesToProcess:
-            task = asyncio.ensure_future(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text(), ui.checkboxKeepStructure.isChecked(), asyncio_semaphore))
+            task = asyncio.ensure_future(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text(), ui.checkboxKeepStructure.isChecked(), ui.checkboxPrefixFilename.isChecked(), asyncio_semaphore))
             task.add_done_callback(command_finished)
             #asyncio.run(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text()))
     
@@ -127,11 +146,14 @@ def on_browse_output():
 def on_checkboxSubfolders_changed():
     checked = ui.checkboxSubfolders.isChecked()
     ui.checkboxKeepStructure.setEnabled(checked)
+    ui.checkboxPrefixFilename.setEnabled(checked)
+
     if not checked:
         ui.checkboxKeepStructure.setChecked(False)
+        ui.checkboxPrefixFilename.setChecked(False)
 
-def on_fieldSource_changed(newText):
-    ui.buttonGenerate.setEnabled(len(newText.strip()) > 0)
+def on_field_changed(newText):
+    ui.buttonGenerate.setEnabled(valid_folders())
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 app = QtWidgets.QApplication(sys.argv)
@@ -151,7 +173,8 @@ ui.buttonGenerate.clicked.connect(on_generate)
 ui.buttonBrowseSource.clicked.connect(on_browse_source)
 ui.buttonBrowseOutput.clicked.connect(on_browse_output)
 ui.checkboxSubfolders.stateChanged.connect(on_checkboxSubfolders_changed)
-ui.fieldSource.textChanged.connect(on_fieldSource_changed)
+ui.fieldSource.textChanged.connect(on_field_changed)
+ui.fieldOutput.textChanged.connect(on_field_changed)
 
 # Globals
 failedFiles = []
