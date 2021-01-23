@@ -67,8 +67,8 @@ async def process_file(full_file_path, input_path, output_path, keep_structure, 
                     output_file = os.path.join(subdir, output_file)
                     
 
-        command = "vcsi {} -t -w 850 -g 4x4 --background-color 000000 " \
-            "--metadata-font-color ffffff -o {}\\{}.jpg".format(full_file_path, output_path, output_file)
+        command = "vcsi \"{}\" -t -w 850 -g 4x4 --background-color 000000 " \
+            "--metadata-font-color ffffff -o \"{}\\{}.jpg\"".format(full_file_path, output_path, output_file)
         proc = await asyncio.create_subprocess_shell(command)
         returncode = await proc.wait()
         if returncode > 0:
