@@ -31,11 +31,14 @@ def command_finished(status):
     if ui.progressBar.isVisible():
         progress = ui.progressBar.value()
         ui.progressBar.setValue(progress + 1)
-        ui.statusBar.showMessage("Processing {} file(s)...".format(ui.progressBar.maximum() - ui.progressBar.value()))
+        filesLeft = ui.progressBar.maximum() - ui.progressBar.value()
+        ui.statusBar.showMessage("Processing {} file(s)...".format(filesLeft))
+        MainWindow.setWindowTitle("{} file(s) left ({})".format(filesLeft, ui.progressBar.text()))
         if ui.progressBar.value() == ui.progressBar.maximum():
             set_processing_mode(False)
             ui.buttonGenerate.setEnabled(True)
             ui.statusBar.showMessage("Generation complete! {} file(s) failed to generate.".format(len(failedFiles)))
+            MainWindow.setWindowTitle(app.applicationName())
             if (len(failedFiles) > 0):
                 message = ""
                 for file in failedFiles:
@@ -65,9 +68,8 @@ async def process_file(full_file_path, input_path, output_path, keep_structure, 
                 output_file = "{}-{}".format(os.path.relpath(subdir, os.path.dirname(subdir)), os.path.basename(output_file))
                 if keep_structure:
                     output_file = os.path.join(subdir, output_file)
-                    
 
-        command = "vcsi \"{}\" -t -w 850 -g 4x4 --background-color 000000 " \
+        command = "vcsi \"{}\" -t -w 850 -g 4x4 --no-overwrite --background-color 000000 " \
             "--metadata-font-color ffffff -o \"{}\\{}.jpg\"".format(full_file_path, output_path, output_file)
         proc = await asyncio.create_subprocess_shell(command)
         returncode = await proc.wait()
@@ -103,6 +105,7 @@ def on_generate():
         for task in pending_tasks:
             task.cancel()
         ui.statusBar.showMessage("Contact sheet generation cancelled.")
+        MainWindow.setWindowTitle(app.applicationName())
         set_processing_mode(False)
     else:
         failedFiles.clear()
