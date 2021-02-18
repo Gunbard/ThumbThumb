@@ -59,7 +59,8 @@ pyinstaller main.spec
 ```
 
 ### Prebuilt Binaries
-TBD - Including the external dependency binaries makes packaging this ~120 MB
+##### Windows
+- [0.1.0](https://github.com/Gunbard/ThumbThumb/releases/download/0.1.0/thumbthumb-0.1.0.zip)
 
 ### License
 MIT
