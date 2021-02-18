@@ -1,4 +1,5 @@
 # ThumbThumb
+# Version: 0.1.0
 # Author: Gunbard
 # 
 import os, sys, subprocess, asyncio, quamash
