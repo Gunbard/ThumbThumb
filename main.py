@@ -1,14 +1,29 @@
 # ThumbThumb
+# Author: Gunbard
 # 
 import os, sys, subprocess, asyncio, quamash
 from mainWindow import Ui_MainWindow
 from PyQt5 import QtCore, QtWidgets
 
+# # Constants
+# Max number of videos to process at a time
 MAX_BATCH_SIZE = 3
+
+# Max number of subdirectories to look into
 MAX_WALK_DEPTH = 10
+
+# Default set of file extensions to consider
 DEFAULT_EXTS = ["mp4", "mkv", "webm", "avi", "mov"]
 
 def set_processing_mode(state):
+    '''
+    Sets UI to whether or not the app is currently processing.
+    Parameters:
+    state (bool): True if app is doing some processing, False otherwise
+
+    Returns:
+    None
+    '''
     ui.buttonBrowseSource.setEnabled(not state)
     ui.buttonBrowseOutput.setEnabled(not state)
     ui.progressBar.setVisible(state)
@@ -25,6 +40,15 @@ def set_processing_mode(state):
         ui.buttonGenerate.setText("Generate")
 
 def command_finished(status):
+    '''
+    Completion callback when a task finishes
+
+    Parameters:
+    status (string): stdout for the command
+
+    Returns:
+    None
+    '''    
     print("DONE")
     print(status)
     
@@ -38,7 +62,7 @@ def command_finished(status):
             set_processing_mode(False)
             ui.buttonGenerate.setEnabled(True)
             ui.statusBar.showMessage("Generation complete! {} file(s) failed to generate.".format(len(failedFiles)))
-            MainWindow.setWindowTitle(app.applicationName())
+            MainWindow.setWindowTitle(originalWindowTitle)
             if (len(failedFiles) > 0):
                 message = ""
                 for file in failedFiles:
@@ -51,6 +75,21 @@ def command_finished(status):
                 dialog.exec()
 
 async def process_file(full_file_path, input_path, output_path, keep_structure, prefix_dirname, semaphore):
+    '''
+    Creates a subprocess to generate a video contact sheet for a video file. Async
+    to not block the UI and allow cancellation.
+
+    Parameters:
+    full_file_path (string): Full path to the file
+    input_path (string): Input folder path
+    output_path (string): Output folder path
+    keep_structure (bool): Whether or not to place output files in a similarly named folder in the output directory
+    prefix_dirname (bool): Whether or not to add the name of the source folder as a prefix to the output file
+    semaphore (asyncio_semaphore): Semaphore used for asyncronous multiprocessing
+
+    Returns:
+    None
+    '''
     async with semaphore:   
         root, file = os.path.split(full_file_path)
         output_file = os.path.relpath(full_file_path, input_path) if keep_structure else file
@@ -77,6 +116,15 @@ async def process_file(full_file_path, input_path, output_path, keep_structure, 
             failedFiles.append(full_file_path) 
 
 def valid_folders():
+    '''
+    Validates whether or not the folder paths are set
+    
+    Parameters:
+    None
+
+    Returns:
+    bool: True if folders are set, False otherwise
+    '''
     if len(ui.fieldSource.text()) == 0 or len(ui.fieldOutput.text()) == 0:
         ui.statusBar.showMessage("Source and Output folders must be set!")
         return False
@@ -85,6 +133,16 @@ def valid_folders():
         return True
 
 def validate_files(path, files):
+    '''
+    Gathers the files in a path that are in the list of supported extensions
+
+    Parameters:
+    path (string): Directory to look into, non-recursively
+    files (List): List of files in the path
+
+    Returns:
+    List: A potentially empty list of valid files in the path (full path strings)
+    '''
     valid_files = []
     for file in files:
         filename, file_extension = os.path.splitext(file)
@@ -100,12 +158,13 @@ def validate_files(path, files):
     return valid_files
 
 def on_generate():
+    '''Callback when the Generate button is pressed. Kicks off processing.'''
     if ui.progressBar.isVisible() == True:
         pending_tasks = asyncio.all_tasks(loop)
         for task in pending_tasks:
             task.cancel()
         ui.statusBar.showMessage("Contact sheet generation cancelled.")
-        MainWindow.setWindowTitle(app.applicationName())
+        MainWindow.setWindowTitle(originalWindowTitle)
         set_processing_mode(False)
     else:
         failedFiles.clear()
@@ -135,18 +194,21 @@ def on_generate():
             #asyncio.run(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text()))
     
 def on_browse_source():
+    '''Opens a folder selection system dialog for the source folder'''
     path = str(QtWidgets.QFileDialog.getExistingDirectory(None, "Select Source Directory"))
     if path == "":
         path = os.getcwd()
     ui.fieldSource.setText(os.path.normpath(path))
     
 def on_browse_output():
+    '''Opens a folder selection system dialog for the output folder'''
     path = str(QtWidgets.QFileDialog.getExistingDirectory(None, "Select Output Directory"))
     if path == "":
         path = os.getcwd()
     ui.fieldOutput.setText(os.path.normpath(path))
 
 def on_checkboxSubfolders_changed():
+    '''Ensures checkbox state with linked checkboxes'''
     checked = ui.checkboxSubfolders.isChecked()
     ui.checkboxKeepStructure.setEnabled(checked)
     ui.checkboxPrefixFilename.setEnabled(checked)
@@ -156,6 +218,14 @@ def on_checkboxSubfolders_changed():
         ui.checkboxPrefixFilename.setChecked(False)
 
 def on_field_changed(newText):
+    '''
+    Callback when a field changes text
+    Parameters:
+    newText (string): The text the field was updated to
+
+    Returns:
+    None
+    '''
     ui.buttonGenerate.setEnabled(valid_folders())
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
@@ -167,6 +237,8 @@ asyncio_semaphore = asyncio.Semaphore(MAX_BATCH_SIZE)
 MainWindow = QtWidgets.QMainWindow()
 ui = Ui_MainWindow()
 ui.setupUi(MainWindow)
+
+# Set initial UI state
 ui.progressBar.setVisible(False)
 ui.fieldOutput.setText(os.getcwd())
 ui.buttonGenerate.setEnabled(False)
@@ -181,6 +253,7 @@ ui.fieldOutput.textChanged.connect(on_field_changed)
 
 # Globals
 failedFiles = []
+originalWindowTitle = MainWindow.windowTitle()
 
 MainWindow.show()
 
