@@ -20,18 +20,6 @@ These should be somewhere in your system PATH
 - vcsi (https://github.com/amietn/vcsi)
 - ffmpeg and ffprobe (https://ffmpeg.org/)
 
-##### Precompile vcsi
-```sh
-git clone https://github.com/amietn/vcsi.git
-pyinstaller --onefile vcsi/vcsi.py
-```
-Look in the "dist" folder for vcsi.exe
-
-### Recompiling the ui
-```sh
-pyuic5 main.ui -o mainWindow.py
-```
-
 ### Running
 ```sh
 python3 main.py
@@ -41,6 +29,13 @@ python3 main.py
 ```sh
 pip3 install pyinstaller
 ```
+
+##### Precompile vcsi
+```sh
+git clone https://github.com/amietn/vcsi.git
+pyinstaller --onefile vcsi/vcsi.py
+```
+Look in the "dist" folder for vcsi.exe
 
 #### Build
 Place vcsi.exe, the [VERSION](https://github.com/amietn/vcsi/blob/master/vcsi/VERSION) file from the vcsi project, ffmpeg.exe, and ffprobe.exe in project root

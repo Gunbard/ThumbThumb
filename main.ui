@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>475</width>
-    <height>271</height>
+    <height>242</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -95,7 +95,26 @@
       </item>
      </layout>
     </item>
-    <item row="13" column="0">
+    <item row="3" column="0">
+     <widget class="QCheckBox" name="checkboxSubfolders">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>1</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Include subfolders in source folder</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="0">
      <widget class="QProgressBar" name="progressBar">
       <property name="enabled">
        <bool>true</bool>
@@ -115,32 +134,31 @@
      </widget>
     </item>
     <item row="4" column="0">
-     <widget class="QCheckBox" name="checkboxSkipExisting">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="text">
-       <string>Skip existing files</string>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="0">
-     <widget class="QCheckBox" name="checkboxPrefixFilename">
+     <widget class="QCheckBox" name="checkboxKeepStructure">
       <property name="enabled">
        <bool>false</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="styleSheet">
        <string notr="true">padding-left: 16</string>
       </property>
       <property name="text">
-       <string>Prefix output filename with folder name</string>
+       <string>Keep folder structure in output folder</string>
+      </property>
+      <property name="autoExclusive">
+       <bool>true</bool>
+      </property>
+      <property name="tristate">
+       <bool>false</bool>
       </property>
      </widget>
     </item>
-    <item row="12" column="0">
+    <item row="7" column="0">
      <widget class="QPushButton" name="buttonGenerate">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -168,47 +186,16 @@
       </property>
      </widget>
     </item>
-    <item row="6" column="0">
-     <widget class="QCheckBox" name="checkboxKeepStructure">
+    <item row="5" column="0">
+     <widget class="QCheckBox" name="checkboxPrefixFilename">
       <property name="enabled">
        <bool>false</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
       </property>
       <property name="styleSheet">
        <string notr="true">padding-left: 16</string>
       </property>
       <property name="text">
-       <string>Keep folder structure in output folder</string>
-      </property>
-      <property name="autoExclusive">
-       <bool>true</bool>
-      </property>
-      <property name="tristate">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="0">
-     <widget class="QCheckBox" name="checkboxSubfolders">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-        <horstretch>1</horstretch>
-        <verstretch>1</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="autoFillBackground">
-       <bool>false</bool>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="text">
-       <string>Include searching through subfolders in source folder</string>
+       <string>Prefix output filename with folder name</string>
       </property>
      </widget>
     </item>

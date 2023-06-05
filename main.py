@@ -31,7 +31,6 @@ def set_processing_mode(state):
     ui.checkboxSubfolders.setEnabled(not state)
     ui.checkboxKeepStructure.setEnabled(ui.checkboxSubfolders.isEnabled() and ui.checkboxSubfolders.isChecked())
     ui.checkboxPrefixFilename.setEnabled(ui.checkboxSubfolders.isEnabled() and ui.checkboxSubfolders.isChecked())
-    ui.checkboxSkipExisting.setEnabled(ui.checkboxSubfolders.isEnabled() and ui.checkboxSubfolders.isChecked())
     ui.fieldOutput.setEnabled(not state)
     ui.fieldSource.setEnabled(not state)
     ui.fieldExtensionFilter.setEnabled(not state)
@@ -76,7 +75,7 @@ def command_finished(status):
                 dialog.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 dialog.exec()
 
-async def process_file(full_file_path, input_path, output_path, keep_structure, skip_existing, prefix_dirname, semaphore):
+async def process_file(full_file_path, input_path, output_path, keep_structure, prefix_dirname, semaphore):
     '''
     Creates a subprocess to generate a video contact sheet for a video file. Async
     to not block the UI and allow cancellation.
@@ -109,10 +108,6 @@ async def process_file(full_file_path, input_path, output_path, keep_structure, 
                 output_file = "{}-{}".format(os.path.relpath(subdir, os.path.dirname(subdir)), os.path.basename(output_file))
                 if keep_structure:
                     output_file = os.path.join(subdir, output_file)
-
-        if skip_existing and os.path.exists(os.path.join(output_path, output_file)):
-            print("Skipping existing file: {}".format(output_file))
-            return
 
         command = "vcsi \"{}\" -t -w 850 -g 4x4 --no-overwrite --background-color 000000 " \
             "--metadata-font-color ffffff -o \"{}\\{}.jpg\"".format(full_file_path, output_path, output_file)
@@ -195,7 +190,7 @@ def on_generate():
         ui.progressBar.setRange(0, len(filesToProcess))
         ui.statusBar.showMessage("Starting processing {} file(s)...".format(len(filesToProcess)))
         for file in filesToProcess:
-            task = asyncio.ensure_future(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text(), ui.checkboxKeepStructure.isChecked(), ui.checkboxSkipExisting.isChecked(), ui.checkboxPrefixFilename.isChecked(), asyncio_semaphore))
+            task = asyncio.ensure_future(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text(), ui.checkboxKeepStructure.isChecked(), ui.checkboxPrefixFilename.isChecked(), asyncio_semaphore))
             task.add_done_callback(command_finished)
             #asyncio.run(process_file(file, ui.fieldSource.text(), ui.fieldOutput.text()))
     
